@@ -59,5 +59,22 @@ namespace HabitTracker.Api.Controllers
 
             return CreatedAtAction(nameof(GetById), new { id = habitDto.Id }, habitDto);
         }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult> Update(string id, UpdateHabitDto updateHabitDto)
+        {
+            Habit? habit = await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
+
+            if (habit == null)
+            {
+                return NotFound();
+            }
+
+            habit.UpdateFromDto(updateHabitDto);
+
+            await dbContext.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }

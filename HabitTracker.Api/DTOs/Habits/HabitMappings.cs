@@ -1,5 +1,4 @@
 ﻿using HabitTracker.Api.Entities;
-using System.Linq.Expressions;
 
 namespace HabitTracker.Api.DTOs.Habits
 {
@@ -69,6 +68,34 @@ namespace HabitTracker.Api.DTOs.Habits
             };
 
             return habitDto;
+        }
+
+        public static void UpdateFromDto(this Habit habit, UpdateHabitDto updateHabitDto)
+        {
+            habit.Name = updateHabitDto.Name;
+            habit.Description = updateHabitDto.Description;
+            habit.Type = updateHabitDto.Type;
+            habit.EndDate = updateHabitDto.EndDate;
+
+            habit.Frequency = new Frequency
+            {
+                Type = updateHabitDto.Frequency.Type,
+                TimesPerPeriod = updateHabitDto.Frequency.TimesPerPeriod
+            };
+
+            habit.Target = new Target
+            {
+                Value = updateHabitDto.Target.Value,
+                Unit = updateHabitDto.Target.Unit
+            };
+
+            if (updateHabitDto.Milestone != null)
+            {
+                habit.Milestone ??= new();
+                habit.Milestone.Target = updateHabitDto.Milestone.Target;
+            }
+
+            habit.UpdatedAtUtc = DateTime.UtcNow;
         }
     }
 }
