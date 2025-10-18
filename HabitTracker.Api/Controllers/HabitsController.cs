@@ -25,12 +25,12 @@ namespace HabitTracker.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<HabitDto>> GetById(string id)
+        public async Task<ActionResult<HabitWithTagsDto>> GetById(string id)
         {
-            HabitDto? habit = await dbContext
+            HabitWithTagsDto? habit = await dbContext
                 .Habits
                 .Where(h => h.Id == id)
-                .Select(HabitQueries.ProjectToDto())
+                .Select(HabitQueries.ProjectToDtoWithTags())
                 .FirstOrDefaultAsync();
 
             if (habit == null)
