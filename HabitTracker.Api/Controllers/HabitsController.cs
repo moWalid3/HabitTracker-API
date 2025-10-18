@@ -111,7 +111,7 @@ namespace HabitTracker.Api.Controllers
         {
             Habit? habit = await dbContext.Habits.FirstOrDefaultAsync(h => h.Id == id);
 
-            if(habit == null)
+            if (habit == null)
             {
                 return NotFound();
             }
