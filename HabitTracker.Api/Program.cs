@@ -1,6 +1,9 @@
 using FluentValidation;
 using HabitTracker.Api.Database;
+using HabitTracker.Api.DTOs.Habits;
+using HabitTracker.Api.Entities;
 using HabitTracker.Api.Middleware;
+using HabitTracker.Api.Services.Sorting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -36,6 +39,10 @@ namespace HabitTracker.Api
                     sqlOptions.MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Application);
                 });
             });
+
+            builder.Services.AddTransient<SortMappingProvider>();
+            builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(
+                _ => HabitMappings.SortMapping);
 
             var app = builder.Build();
 
