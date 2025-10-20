@@ -1,4 +1,6 @@
-﻿using HabitTracker.Api.Database;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using HabitTracker.Api.Database;
 using HabitTracker.Api.DTOs.Habits;
 using HabitTracker.Api.Entities;
 using Microsoft.AspNetCore.JsonPatch;
@@ -42,8 +44,17 @@ namespace HabitTracker.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<HabitDto>> Create(CreateHabitDto createHabitDto)
+        public async Task<ActionResult<HabitDto>> Create(
+            CreateHabitDto createHabitDto,
+            IValidator<CreateHabitDto> validator)
         {
+            ValidationResult validationResult = await validator.ValidateAsync(createHabitDto);
+
+            if (!validationResult.IsValid)
+            {
+                return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
+            }
+
             Habit habit = createHabitDto.ToEntity();
 
             try

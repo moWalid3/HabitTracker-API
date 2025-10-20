@@ -1,4 +1,6 @@
-﻿using HabitTracker.Api.Database;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using HabitTracker.Api.Database;
 using HabitTracker.Api.DTOs.Tags;
 using HabitTracker.Api.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -41,15 +43,26 @@ namespace HabitTracker.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<TagDto>> Create(CreateTagDto createTagDto)
+        public async Task<ActionResult<TagDto>> Create(
+            CreateTagDto createTagDto,
+            IValidator<CreateTagDto> validator)
         {
+            ValidationResult validationResult = await validator.ValidateAsync(createTagDto);
+
+            if (!validationResult.IsValid)
+            {
+                return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
+            }
+
             Tag tag = createTagDto.ToEntity();
 
             bool isTagExisting = await dbContext.Tags.AnyAsync(t => t.Name == tag.Name);
 
             if (isTagExisting)
             {
-                return Conflict($"The tag '{tag.Name}' already exists");
+                return Problem(
+                    detail: $"The tag '{tag.Name}' already exists",
+                    statusCode: StatusCodes.Status409Conflict);
             }
 
             await dbContext.Tags.AddAsync(tag);

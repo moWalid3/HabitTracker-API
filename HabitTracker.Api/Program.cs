@@ -1,3 +1,4 @@
+using FluentValidation;
 using HabitTracker.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -11,6 +12,16 @@ namespace HabitTracker.Api
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers().AddNewtonsoftJson();
+
+            builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
+            builder.Services.AddProblemDetails(options =>
+            {
+                options.CustomizeProblemDetails = context =>
+                {
+                    context.ProblemDetails.Extensions.TryAdd("requestId", context.HttpContext.TraceIdentifier);
+                };
+            });
 
             builder.Services.AddOpenApi();
 
