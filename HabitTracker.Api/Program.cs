@@ -1,5 +1,6 @@
 using FluentValidation;
 using HabitTracker.Api.Database;
+using HabitTracker.Api.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -23,6 +24,9 @@ namespace HabitTracker.Api
                 };
             });
 
+            builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
             builder.Services.AddOpenApi();
 
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -42,8 +46,9 @@ namespace HabitTracker.Api
 
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
+            app.UseExceptionHandler();
 
+            app.UseAuthorization();
 
             app.MapControllers();
 

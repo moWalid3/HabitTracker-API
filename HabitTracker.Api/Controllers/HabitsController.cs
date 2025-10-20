@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using FluentValidation.Results;
 using HabitTracker.Api.Database;
 using HabitTracker.Api.DTOs.Habits;
 using HabitTracker.Api.Entities;
@@ -48,12 +47,7 @@ namespace HabitTracker.Api.Controllers
             CreateHabitDto createHabitDto,
             IValidator<CreateHabitDto> validator)
         {
-            ValidationResult validationResult = await validator.ValidateAsync(createHabitDto);
-
-            if (!validationResult.IsValid)
-            {
-                return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
-            }
+            await validator.ValidateAndThrowAsync(createHabitDto);
 
             Habit habit = createHabitDto.ToEntity();
 

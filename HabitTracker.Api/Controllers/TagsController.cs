@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using FluentValidation.Results;
 using HabitTracker.Api.Database;
 using HabitTracker.Api.DTOs.Tags;
 using HabitTracker.Api.Entities;
@@ -47,12 +46,7 @@ namespace HabitTracker.Api.Controllers
             CreateTagDto createTagDto,
             IValidator<CreateTagDto> validator)
         {
-            ValidationResult validationResult = await validator.ValidateAsync(createTagDto);
-
-            if (!validationResult.IsValid)
-            {
-                return ValidationProblem(new ValidationProblemDetails(validationResult.ToDictionary()));
-            }
+            await validator.ValidateAndThrowAsync(createTagDto);
 
             Tag tag = createTagDto.ToEntity();
 
