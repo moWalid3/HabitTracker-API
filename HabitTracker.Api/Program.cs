@@ -3,9 +3,11 @@ using HabitTracker.Api.Database;
 using HabitTracker.Api.DTOs.Habits;
 using HabitTracker.Api.Entities;
 using HabitTracker.Api.Middleware;
+using HabitTracker.Api.Services;
 using HabitTracker.Api.Services.Sorting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Newtonsoft.Json.Serialization;
 
 namespace HabitTracker.Api
 {
@@ -15,7 +17,9 @@ namespace HabitTracker.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddControllers().AddNewtonsoftJson();
+            builder.Services.AddControllers()
+                .AddNewtonsoftJson(options =>
+                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver());
 
             builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -43,6 +47,8 @@ namespace HabitTracker.Api
             builder.Services.AddTransient<SortMappingProvider>();
             builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(
                 _ => HabitMappings.SortMapping);
+
+            builder.Services.AddTransient<DataShapingService>();
 
             var app = builder.Build();
 
