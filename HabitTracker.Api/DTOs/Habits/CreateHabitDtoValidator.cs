@@ -7,8 +7,8 @@ namespace HabitTracker.Api.DTOs.Habits
     {
         private static readonly string[] AllowedUnits =
         [
-            "minutes", "hours", "steps", "km", "cal",
-            "pages", "books", "tasks", "sessions"
+            "minutes", "hours", "steps", "words", "km", "cal",
+            "pages", "books", "tasks", "glasses", "sessions"
         ];
 
         private static readonly string[] AllowedUnitsForBinaryHabits = ["sessions", "tasks"];

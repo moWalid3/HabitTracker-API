@@ -13,10 +13,17 @@ namespace HabitTracker.Api.Controllers
     public sealed class HabitsController(AppDbContext dbContext) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<HabitsCollectionDto>> GetAll()
+        public async Task<ActionResult<HabitsCollectionDto>> GetAll([FromQuery] HabitsQueryParameters query)
         {
+            query.Search ??= query.Search?.Trim().ToLower();
+
             List<HabitDto> habits = await dbContext
                 .Habits
+                .Where(h => query.Search == null ||
+                            h.Name.ToLower().Contains(query.Search) ||
+                            h.Description != null && h.Description.ToLower().Contains(query.Search))
+                .Where(h => query.Type == null || h.Type == query.Type)
+                .Where(h => query.Status == null || h.Status == query.Status)
                 .Select(HabitQueries.ProjectToDto())
                 .ToListAsync();
 
