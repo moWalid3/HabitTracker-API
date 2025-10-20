@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using HabitTracker.Api.Database;
+using HabitTracker.Api.DTOs.Common;
 using HabitTracker.Api.DTOs.Habits;
 using HabitTracker.Api.Entities;
 using HabitTracker.Api.Services.Sorting;
@@ -15,7 +16,7 @@ namespace HabitTracker.Api.Controllers
     public sealed class HabitsController(AppDbContext dbContext) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<HabitsCollectionDto>> GetAll(
+        public async Task<ActionResult<PaginationResult<HabitDto>>> GetAll(
             [FromQuery] HabitsQueryParameters query,
             SortMappingProvider sortMappingProvider)
         {
@@ -30,7 +31,7 @@ namespace HabitTracker.Api.Controllers
 
             query.Search ??= query.Search?.Trim().ToLower();
 
-            List<HabitDto> habits = await dbContext
+            IQueryable<HabitDto> habitsQuery = dbContext
                 .Habits
                 .Where(h => query.Search == null ||
                             h.Name.ToLower().Contains(query.Search) ||
@@ -38,12 +39,12 @@ namespace HabitTracker.Api.Controllers
                 .Where(h => query.Type == null || h.Type == query.Type)
                 .Where(h => query.Status == null || h.Status == query.Status)
                 .ApplySort(query.Sort, sortMappings)
-                .Select(HabitQueries.ProjectToDto())
-                .ToListAsync();
+                .Select(HabitQueries.ProjectToDto());
 
-            HabitsCollectionDto habitsCollectionDto = new() { Data = habits };
+            PaginationResult<HabitDto> paginationResult =
+                await PaginationResult<HabitDto>.CreateAsync(habitsQuery, query.Page, query.PageSize);
 
-            return Ok(habitsCollectionDto);
+            return Ok(paginationResult);
         }
 
         [HttpGet("{id}")]

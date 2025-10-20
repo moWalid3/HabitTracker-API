@@ -19,7 +19,7 @@ namespace HabitTracker.Api.Controllers
                 .Select(TagQueries.ProjectToDto())
                 .ToListAsync();
 
-            TagsCollectionDto tagsCollectionDto = new() { Data = tags };
+            TagsCollectionDto tagsCollectionDto = new() { Items = tags };
 
             return Ok(tagsCollectionDto);
         }
