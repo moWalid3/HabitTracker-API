@@ -3,11 +3,13 @@ using HabitTracker.Api.DTOs.Auth;
 using HabitTracker.Api.DTOs.Users;
 using HabitTracker.Api.Entities;
 using HabitTracker.Api.Services;
+using HabitTracker.Api.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Options;
 
 namespace HabitTracker.Api.Controllers
 {
@@ -18,8 +20,11 @@ namespace HabitTracker.Api.Controllers
         UserManager<IdentityUser> userManager,
         AppIdentityDbContext identityDbContext,
         AppDbContext appDbContext,
-        TokenProvider tokenProvider) : ControllerBase
+        TokenProvider tokenProvider,
+        IOptions<JwtAuthOptions> options) : ControllerBase
     {
+        private readonly JwtAuthOptions jwtAuthOptions = options.Value;
+
         [HttpPost("register")]
         public async Task<ActionResult<AccessTokensDto>> Register(RegisterUserDto registerUserDto)
         {
@@ -58,10 +63,21 @@ namespace HabitTracker.Api.Controllers
             await appDbContext.Users.AddAsync(user);
             await appDbContext.SaveChangesAsync();
 
-            await transaction.CommitAsync();
-
             TokenRequest tokenRequest = new(identityUser.Id, identityUser.Email);
             AccessTokensDto accessTokens = tokenProvider.Create(tokenRequest);
+
+            RefreshToken refreshToken = new()
+            {
+                Id = Guid.CreateVersion7(),
+                UserId = identityUser.Id,
+                Token = accessTokens.RefreshToken,
+                ExpiresAtUtc = DateTime.UtcNow.AddDays(jwtAuthOptions.RefreshTokenExpirationDays)
+            };
+
+            await identityDbContext.RefreshTokens.AddAsync(refreshToken);
+            await identityDbContext.SaveChangesAsync();
+
+            await transaction.CommitAsync();
 
             return Ok(accessTokens);
         }
@@ -77,9 +93,48 @@ namespace HabitTracker.Api.Controllers
             }
 
             TokenRequest tokenRequest = new(identityUser.Id, identityUser.Email!);
-            AccessTokensDto accessTokensDto = tokenProvider.Create(tokenRequest);
+            AccessTokensDto accessTokens = tokenProvider.Create(tokenRequest);
 
-            return Ok(accessTokensDto);
+            RefreshToken refreshToken = new()
+            {
+                Id = Guid.CreateVersion7(),
+                UserId = identityUser.Id,
+                Token = accessTokens.RefreshToken,
+                ExpiresAtUtc = DateTime.UtcNow.AddDays(jwtAuthOptions.RefreshTokenExpirationDays)
+            };
+
+            await identityDbContext.RefreshTokens.AddAsync(refreshToken);
+            await identityDbContext.SaveChangesAsync();
+
+            return Ok(accessTokens);
+        }
+
+        [HttpPost("refresh")]
+        public async Task<ActionResult<AccessTokensDto>> Refresh(RefreshTokenDto refreshTokenDto)
+        {
+            RefreshToken? refreshToken = await identityDbContext.RefreshTokens
+                .Include(r => r.User)
+                .FirstOrDefaultAsync(r => r.Token == refreshTokenDto.RefreshToken);
+
+            if (refreshToken == null)
+            {
+                return Unauthorized();
+            }
+
+            if (refreshToken.ExpiresAtUtc < DateTime.UtcNow)
+            {
+                return Unauthorized();
+            }
+
+            TokenRequest tokenRequest = new(refreshToken.User.Id, refreshToken.User.Email!);
+            AccessTokensDto accessTokens = tokenProvider.Create(tokenRequest);
+
+            refreshToken.Token = accessTokens.RefreshToken;
+            refreshToken.ExpiresAtUtc = DateTime.UtcNow.AddDays(jwtAuthOptions.RefreshTokenExpirationDays);
+
+            await identityDbContext.SaveChangesAsync();
+
+            return Ok(accessTokens);
         }
     }
 }
