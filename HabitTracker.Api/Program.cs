@@ -10,7 +10,8 @@ namespace HabitTracker.Api
                 .AddApiServices()
                 .AddErrorHandling()
                 .AddDatabase()
-                .AddApplicationServices();
+                .AddApplicationServices()
+                .AddAuthenticationServices();
 
             var app = builder.Build();
 

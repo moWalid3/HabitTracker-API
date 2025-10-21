@@ -5,6 +5,7 @@ using HabitTracker.Api.Entities;
 using HabitTracker.Api.Middleware;
 using HabitTracker.Api.Services;
 using HabitTracker.Api.Services.Sorting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
@@ -61,6 +62,14 @@ namespace HabitTracker.Api
                 });
             });
 
+            builder.Services.AddDbContext<AppIdentityDbContext>(options =>
+            {
+                options.UseSqlServer(builder.Configuration.GetConnectionString("Database"), sqlOptions =>
+                {
+                    sqlOptions.MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Identity);
+                });
+            });
+
             return builder;
         }
 
@@ -76,6 +85,15 @@ namespace HabitTracker.Api
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddTransient<LinkService>();
+
+            return builder;
+        }
+
+        public static WebApplicationBuilder AddAuthenticationServices(this WebApplicationBuilder builder)
+        {
+            builder.Services
+                .AddIdentity<IdentityUser, IdentityRole>()
+                .AddEntityFrameworkStores<AppIdentityDbContext>();
 
             return builder;
         }
