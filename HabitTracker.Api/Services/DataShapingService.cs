@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using HabitTracker.Api.DTOs.Common;
+using System.Collections.Concurrent;
 using System.Dynamic;
 using System.Reflection;
 
@@ -36,7 +37,10 @@ namespace HabitTracker.Api.Services
             return (ExpandoObject)shapedObject;
         }
 
-        public List<ExpandoObject> ShapeCollectionData<T>(IEnumerable<T> entities, string? fields)
+        public List<ExpandoObject> ShapeCollectionData<T>(
+            IEnumerable<T> entities,
+            string? fields,
+            Func<T, List<LinkDto>>? linksFactory = null)
         {
             HashSet<string> fieldsSet = fields?
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -63,6 +67,11 @@ namespace HabitTracker.Api.Services
                 foreach (PropertyInfo propertyInfo in propertyInfos)
                 {
                     shapedObject[propertyInfo.Name] = propertyInfo.GetValue(entity);
+                }
+
+                if (linksFactory != null)
+                {
+                    shapedObject["links"] = linksFactory(entity);
                 }
 
                 shapedObjects.Add((ExpandoObject)shapedObject);
