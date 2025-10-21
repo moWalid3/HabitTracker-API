@@ -7,7 +7,7 @@ namespace HabitTracker.Api
             var builder = WebApplication.CreateBuilder(args);
 
             builder
-                .AddControllers()
+                .AddApiServices()
                 .AddErrorHandling()
                 .AddDatabase()
                 .AddApplicationServices();

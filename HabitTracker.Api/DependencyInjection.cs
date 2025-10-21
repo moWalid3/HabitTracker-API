@@ -15,7 +15,7 @@ namespace HabitTracker.Api
 {
     public static class DependencyInjection
     {
-        public static WebApplicationBuilder AddControllers(this WebApplicationBuilder builder)
+        public static WebApplicationBuilder AddApiServices(this WebApplicationBuilder builder)
         {
             builder.Services.AddControllers()
                 .AddNewtonsoftJson(options =>
@@ -29,6 +29,8 @@ namespace HabitTracker.Api
 
                 formatter.SupportedMediaTypes.Add(CustomMediaTypeNames.Application.HateoasJson);
             });
+
+            builder.Services.AddOpenApi();
 
             return builder;
         }
@@ -65,8 +67,6 @@ namespace HabitTracker.Api
         public static WebApplicationBuilder AddApplicationServices(this WebApplicationBuilder builder)
         {
             builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-
-            builder.Services.AddOpenApi();
 
             builder.Services.AddTransient<SortMappingProvider>();
             builder.Services.AddSingleton<ISortMappingDefinition, SortMappingDefinition<HabitDto, Habit>>(
