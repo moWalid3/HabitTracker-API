@@ -1,11 +1,13 @@
 ﻿using HabitTracker.Api.Database;
 using HabitTracker.Api.DTOs.HabitTags;
 using HabitTracker.Api.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace HabitTracker.Api.Controllers
 {
+    [Authorize]
     [Route("habits/{habitId}/tags")]
     [ApiController]
     public class HabitTagsController(AppDbContext dbContext) : ControllerBase

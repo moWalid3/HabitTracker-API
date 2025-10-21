@@ -24,6 +24,7 @@ namespace HabitTracker.Api
 
             app.UseExceptionHandler();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

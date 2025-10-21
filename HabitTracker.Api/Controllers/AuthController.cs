@@ -2,6 +2,7 @@
 using HabitTracker.Api.DTOs.Auth;
 using HabitTracker.Api.DTOs.Users;
 using HabitTracker.Api.Entities;
+using HabitTracker.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +17,11 @@ namespace HabitTracker.Api.Controllers
     public sealed class AuthController(
         UserManager<IdentityUser> userManager,
         AppIdentityDbContext identityDbContext,
-        AppDbContext appDbContext) : ControllerBase
+        AppDbContext appDbContext,
+        TokenProvider tokenProvider) : ControllerBase
     {
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterUserDto registerUserDto)
+        public async Task<ActionResult<AccessTokensDto>> Register(RegisterUserDto registerUserDto)
         {
             using IDbContextTransaction transaction = await identityDbContext.Database.BeginTransactionAsync();
             appDbContext.Database.SetDbConnection(identityDbContext.Database.GetDbConnection());
@@ -58,9 +60,26 @@ namespace HabitTracker.Api.Controllers
 
             await transaction.CommitAsync();
 
-            return Ok(user.Id);
+            TokenRequest tokenRequest = new(identityUser.Id, identityUser.Email);
+            AccessTokensDto accessTokens = tokenProvider.Create(tokenRequest);
+
+            return Ok(accessTokens);
         }
 
+        [HttpPost("login")]
+        public async Task<ActionResult<AccessTokensDto>> Login(LoginUserDto loginUserDto)
+        {
+            IdentityUser? identityUser = await userManager.FindByEmailAsync(loginUserDto.Email);
 
+            if (identityUser == null || !await userManager.CheckPasswordAsync(identityUser, loginUserDto.Password))
+            {
+                return Unauthorized();
+            }
+
+            TokenRequest tokenRequest = new(identityUser.Id, identityUser.Email!);
+            AccessTokensDto accessTokensDto = tokenProvider.Create(tokenRequest);
+
+            return Ok(accessTokensDto);
+        }
     }
 }

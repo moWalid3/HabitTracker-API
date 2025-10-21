@@ -1,10 +1,12 @@
 ﻿using HabitTracker.Api.Database;
 using HabitTracker.Api.DTOs.Users;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace HabitTracker.Api.Controllers
 {
+    [Authorize]
     [Route("[controller]")]
     [ApiController]
     public sealed class UsersController(AppDbContext dbContext) : ControllerBase

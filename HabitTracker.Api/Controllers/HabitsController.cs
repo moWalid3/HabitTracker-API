@@ -5,6 +5,7 @@ using HabitTracker.Api.DTOs.Habits;
 using HabitTracker.Api.Entities;
 using HabitTracker.Api.Services;
 using HabitTracker.Api.Services.Sorting;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ using System.Linq.Dynamic.Core;
 
 namespace HabitTracker.Api.Controllers
 {
+    [Authorize]
     [Route("[controller]")]
     [ApiController]
     public sealed class HabitsController(AppDbContext dbContext, LinkService linkService) : ControllerBase

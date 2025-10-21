@@ -5,12 +5,16 @@ using HabitTracker.Api.Entities;
 using HabitTracker.Api.Middleware;
 using HabitTracker.Api.Services;
 using HabitTracker.Api.Services.Sorting;
+using HabitTracker.Api.Settings;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Serialization;
+using System.Text;
 
 namespace HabitTracker.Api
 {
@@ -86,6 +90,8 @@ namespace HabitTracker.Api
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddTransient<LinkService>();
 
+            builder.Services.AddTransient<TokenProvider>();
+
             return builder;
         }
 
@@ -94,6 +100,28 @@ namespace HabitTracker.Api
             builder.Services
                 .AddIdentity<IdentityUser, IdentityRole>()
                 .AddEntityFrameworkStores<AppIdentityDbContext>();
+
+            builder.Services.Configure<JwtAuthOptions>(builder.Configuration.GetSection("Jwt"));
+
+            JwtAuthOptions jwtAuthOptions = builder.Configuration.GetSection("Jwt").Get<JwtAuthOptions>()!;
+
+            builder.Services
+                .AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidIssuer = jwtAuthOptions.Issuer,
+                        ValidAudience = jwtAuthOptions.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtAuthOptions.Key))
+                    };
+                });
+
+            builder.Services.AddAuthorization();
 
             return builder;
         }
