@@ -2,6 +2,7 @@
 using HabitTracker.Api.Database;
 using HabitTracker.Api.DTOs.Tags;
 using HabitTracker.Api.Entities;
+using HabitTracker.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,13 +12,21 @@ namespace HabitTracker.Api.Controllers
     [Authorize]
     [Route("[controller]")]
     [ApiController]
-    public sealed class TagsController(AppDbContext dbContext) : ControllerBase
+    public sealed class TagsController(AppDbContext dbContext, UserContext userContext) : ControllerBase
     {
         [HttpGet]
-        public async Task<ActionResult<TagsCollectionDto>> Get()
+        public async Task<ActionResult<TagsCollectionDto>> GetAll()
         {
+            string? userId = await userContext.GetUserIdAsync();
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
             List<TagDto> tags = await dbContext
                 .Tags
+                .Where(t => t.UserId == userId)
                 .Select(TagQueries.ProjectToDto())
                 .ToListAsync();
 
@@ -29,9 +38,16 @@ namespace HabitTracker.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<TagDto>> GetById(string id)
         {
+            string? userId = await userContext.GetUserIdAsync();
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
             TagDto? tag = await dbContext
                 .Tags
-                .Where(t => t.Id == id)
+                .Where(t => t.Id == id && t.UserId == userId)
                 .Select(TagQueries.ProjectToDto())
                 .FirstOrDefaultAsync();
 
@@ -48,11 +64,18 @@ namespace HabitTracker.Api.Controllers
             CreateTagDto createTagDto,
             IValidator<CreateTagDto> validator)
         {
+            string? userId = await userContext.GetUserIdAsync();
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
             await validator.ValidateAndThrowAsync(createTagDto);
 
-            Tag tag = createTagDto.ToEntity();
+            Tag tag = createTagDto.ToEntity(userId);
 
-            bool isTagExisting = await dbContext.Tags.AnyAsync(t => t.Name == tag.Name);
+            bool isTagExisting = await dbContext.Tags.AnyAsync(t => t.Name == tag.Name && t.UserId == userId);
 
             if (isTagExisting)
             {
@@ -72,15 +95,22 @@ namespace HabitTracker.Api.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult> Update(string id, UpdateTagDto updateTagDto)
         {
+            string? userId = await userContext.GetUserIdAsync();
 
-            Tag? tag = await dbContext.Tags.FirstOrDefaultAsync(t => t.Id == id);
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            Tag? tag = await dbContext.Tags.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
             if (tag == null)
             {
                 return NotFound();
             }
 
-            bool isTagExisting = await dbContext.Tags.AnyAsync(t => t.Name == updateTagDto.Name && t.Id != tag.Id);
+            bool isTagExisting = await dbContext.Tags
+                .AnyAsync(t => t.Name == updateTagDto.Name && t.Id != tag.Id && t.UserId == userId);
 
             if (isTagExisting)
             {
@@ -97,7 +127,14 @@ namespace HabitTracker.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id)
         {
-            Tag? tag = await dbContext.Tags.FirstOrDefaultAsync(t => t.Id == id);
+            string? userId = await userContext.GetUserIdAsync();
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            Tag? tag = await dbContext.Tags.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
 
             if (tag == null)
             {

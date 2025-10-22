@@ -11,6 +11,7 @@ namespace HabitTracker.Api.Database.Configurations
             builder.HasKey(h => h.Id);
 
             builder.Property(h => h.Id).HasMaxLength(500);
+            builder.Property(h => h.UserId).HasMaxLength(500);
 
             builder.Property(h => h.Name).HasMaxLength(100);
 
@@ -28,6 +29,10 @@ namespace HabitTracker.Api.Database.Configurations
             builder.HasMany(h => h.Tags)
                 .WithMany()
                 .UsingEntity<HabitTag>();
+
+            builder.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(h => h.UserId);
         }
     }
 }
