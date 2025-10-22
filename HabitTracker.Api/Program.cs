@@ -1,3 +1,5 @@
+using HabitTracker.Api.Settings;
+
 namespace HabitTracker.Api
 {
     public class Program
@@ -11,7 +13,8 @@ namespace HabitTracker.Api
                 .AddErrorHandling()
                 .AddDatabase()
                 .AddApplicationServices()
-                .AddAuthenticationServices();
+                .AddAuthenticationServices()
+                .AddCorsPolicy();
 
             var app = builder.Build();
 
@@ -23,6 +26,8 @@ namespace HabitTracker.Api
             app.UseHttpsRedirection();
 
             app.UseExceptionHandler();
+
+            app.UseCors(CorsOptions.PolicyName);
 
             app.UseAuthentication();
             app.UseAuthorization();
