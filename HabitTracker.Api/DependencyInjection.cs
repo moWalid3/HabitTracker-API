@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Serialization;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace HabitTracker.Api
@@ -94,6 +95,21 @@ namespace HabitTracker.Api
 
             builder.Services.AddMemoryCache();
             builder.Services.AddScoped<UserContext>();
+
+            builder.Services.AddScoped<GithubAccessTokenService>();
+            builder.Services.AddTransient<GithubService>();
+            builder.Services
+                .AddHttpClient("github")
+                .ConfigureHttpClient(httpClient =>
+                {
+                    httpClient.BaseAddress = new Uri("https://api.github.com");
+
+                    httpClient.DefaultRequestHeaders
+                        .UserAgent.Add(new ProductInfoHeaderValue("HabitTracker", "1.0"));
+
+                    httpClient.DefaultRequestHeaders
+                        .Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+                });
 
             return builder;
         }

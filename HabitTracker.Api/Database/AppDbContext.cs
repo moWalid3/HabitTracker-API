@@ -10,6 +10,7 @@ namespace HabitTracker.Api.Database
         public DbSet<Tag> Tags { get; set; }
         public DbSet<HabitTag> HabitTags { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<GithubAccessToken> GithubAccessTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -19,6 +20,7 @@ namespace HabitTracker.Api.Database
             modelBuilder.ApplyConfiguration(new TagConfiguration());
             modelBuilder.ApplyConfiguration(new HabitTagConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new GithubAccessTokenConfiguration());
         }
     }
 }
