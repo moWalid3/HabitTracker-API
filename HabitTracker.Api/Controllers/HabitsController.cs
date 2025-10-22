@@ -14,7 +14,7 @@ using System.Linq.Dynamic.Core;
 
 namespace HabitTracker.Api.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Roles.Member)]
     [Route("[controller]")]
     [ApiController]
     public sealed class HabitsController(

@@ -1,5 +1,6 @@
 ﻿using HabitTracker.Api.Database;
 using HabitTracker.Api.DTOs.Users;
+using HabitTracker.Api.Entities;
 using HabitTracker.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,12 +8,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HabitTracker.Api.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Roles.Member)]
     [Route("[controller]")]
     [ApiController]
     public sealed class UsersController(AppDbContext dbContext, UserContext userContext) : ControllerBase
     {
         [HttpGet("{id}")]
+        [Authorize(Roles = Roles.Admin)]
         public async Task<ActionResult<UserDto>> GetUserById(string id)
         {
             string? userId = await userContext.GetUserIdAsync();

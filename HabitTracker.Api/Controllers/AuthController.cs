@@ -38,15 +38,33 @@ namespace HabitTracker.Api.Controllers
                 Email = registerUserDto.Email,
             };
 
-            IdentityResult identityResult = await userManager.CreateAsync(identityUser, registerUserDto.Password);
+            IdentityResult createUserResult = await userManager.CreateAsync(identityUser, registerUserDto.Password);
 
-            if (!identityResult.Succeeded)
+            if (!createUserResult.Succeeded)
             {
                 Dictionary<string, object?> extensions = new()
                 {
                     {
                         "errors",
-                        identityResult.Errors.ToDictionary(e => e.Code, e => e.Description)
+                        createUserResult.Errors.ToDictionary(e => e.Code, e => e.Description)
+                    }
+                };
+
+                return Problem(
+                    detail: "Unable to register user, please try again",
+                    statusCode: StatusCodes.Status400BadRequest,
+                    extensions: extensions);
+            }
+
+            IdentityResult addToRoleResult = await userManager.AddToRoleAsync(identityUser, Roles.Member);
+
+            if (!addToRoleResult.Succeeded)
+            {
+                Dictionary<string, object?> extensions = new()
+                {
+                    {
+                        "errors",
+                        addToRoleResult.Errors.ToDictionary(e => e.Code, e => e.Description)
                     }
                 };
 
@@ -63,7 +81,7 @@ namespace HabitTracker.Api.Controllers
             await appDbContext.Users.AddAsync(user);
             await appDbContext.SaveChangesAsync();
 
-            TokenRequest tokenRequest = new(identityUser.Id, identityUser.Email);
+            TokenRequest tokenRequest = new(identityUser.Id, identityUser.Email, [Roles.Member]);
             AccessTokensDto accessTokens = tokenProvider.Create(tokenRequest);
 
             RefreshToken refreshToken = new()
@@ -92,7 +110,9 @@ namespace HabitTracker.Api.Controllers
                 return Unauthorized();
             }
 
-            TokenRequest tokenRequest = new(identityUser.Id, identityUser.Email!);
+            IList<string> roles = await userManager.GetRolesAsync(identityUser);
+
+            TokenRequest tokenRequest = new(identityUser.Id, identityUser.Email!, roles);
             AccessTokensDto accessTokens = tokenProvider.Create(tokenRequest);
 
             RefreshToken refreshToken = new()
@@ -126,7 +146,9 @@ namespace HabitTracker.Api.Controllers
                 return Unauthorized();
             }
 
-            TokenRequest tokenRequest = new(refreshToken.User.Id, refreshToken.User.Email!);
+            IList<string> roles = await userManager.GetRolesAsync(refreshToken.User);
+
+            TokenRequest tokenRequest = new(refreshToken.User.Id, refreshToken.User.Email!, roles);
             AccessTokensDto accessTokens = tokenProvider.Create(tokenRequest);
 
             refreshToken.Token = accessTokens.RefreshToken;
