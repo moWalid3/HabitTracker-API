@@ -1,4 +1,5 @@
 using HabitTracker.Api.Settings;
+using Scalar.AspNetCore;
 
 namespace HabitTracker.Api
 {
@@ -22,6 +23,8 @@ namespace HabitTracker.Api
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
+
+                app.MapScalarApiReference();
             }
 
             app.UseHttpsRedirection();
