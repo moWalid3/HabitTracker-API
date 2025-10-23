@@ -8,12 +8,14 @@ using HabitTracker.Api.Services.Sorting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Dynamic;
 using System.Linq.Dynamic.Core;
 
 namespace HabitTracker.Api.Controllers
 {
+    [EnableRateLimiting("default")]
     [Authorize(Roles = Roles.Member)]
     [Route("[controller]")]
     [ApiController]

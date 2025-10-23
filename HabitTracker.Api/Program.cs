@@ -14,7 +14,8 @@ namespace HabitTracker.Api
                 .AddDatabase()
                 .AddApplicationServices()
                 .AddAuthenticationServices()
-                .AddCorsPolicy();
+                .AddCorsPolicy()
+                .AddRateLimiting();
 
             var app = builder.Build();
 
@@ -31,6 +32,8 @@ namespace HabitTracker.Api
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseRateLimiter();
 
             app.MapControllers();
 
